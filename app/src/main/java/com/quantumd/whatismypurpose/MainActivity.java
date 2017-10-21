@@ -56,8 +56,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     }
 
-    public void startSpeech(){
+    public void startSpeech(View v){
         expression.setText("What is my purpose?");
+        returnedText.setText("Speak now");
         progressBar.setVisibility(View.VISIBLE);
         button.setEnabled(false);
         progressBar.setIndeterminate(true);
@@ -100,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         progressBar.setVisibility(View.INVISIBLE);
         button.setVisibility(View.VISIBLE);
         button.setEnabled(true);
-        returnedText.setText("Speak now");
         returnedText.setVisibility(View.INVISIBLE);
 
     }
@@ -132,9 +132,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         Log.i(LOG_TAG, "onResults");
         ArrayList<String> matches = results
                 .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        String text = "";
+        //String text = "";
         for (String result : matches){
-            text += result + "\n";
+            //text += result + "\n";
             if(purpose.youPassButter(result)){
                 expression.setText("Oh my god :(");
             }
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
 
 
-        returnedText.setText(text);
+        //returnedText.setText(text);
     }
 
     @Override
