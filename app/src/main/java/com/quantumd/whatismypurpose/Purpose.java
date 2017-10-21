@@ -36,5 +36,5 @@ public class Purpose {
 
         return c1 && c2 && c3;
     }
-    
+
 }
