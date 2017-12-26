@@ -1,21 +1,32 @@
 package com.quantumd.whatismypurpose;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
 import android.os.Bundle;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements RecognitionListener {
+
+public class MainActivity extends Activity implements RecognitionListener {
 
     private TextView expression;
     private TextView returnedText;
@@ -24,7 +35,17 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     private SpeechRecognizer speech = null;
     private Intent recognizerIntent;
     private String LOG_TAG = "VoiceRecognitionActivity";
+    private final String ANSWER = "Oh my god :(";
     private Purpose purpose = new Purpose();
+
+
+    //socket code
+    private Button btnConn;
+    private TextView txvIP;
+    private EditText etIP;
+    private String serverIP;
+    public Socket socket;
+    private static final int SERVERPORT = 5000;
 
 
 
@@ -33,10 +54,17 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         expression = (TextView) findViewById(R.id.textView);
         returnedText = (TextView) findViewById(R.id.textView2);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        button =(ImageView) findViewById(R.id.imageView);
+        button = (ImageView) findViewById(R.id.imageView);
+        //socket code
+        btnConn = (Button) findViewById(R.id.button_conn);
+        txvIP = (TextView) findViewById(R.id.ip_txv);
+        etIP = (EditText) findViewById(R.id.ip_txt);
+
+
 
 
         progressBar.setVisibility(View.INVISIBLE);
@@ -52,11 +80,36 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
 
 
+        //socket code
 
+        btnConn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i("EVENT", "Button pressed " + btnConn.getText().toString());
+                if(btnConn.getText().toString().equals("CONNECT")) {
+
+                    try {
+                        serverIP = etIP.getText().toString();
+                        new Thread(new ClientThread()).start();
+                    } catch (Exception e) {
+                        Log.i("ERROR", "SOCKET FAILED TO SEND DATA " + e.getLocalizedMessage());
+                    }
+                }else{
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    txvIP.setText("IP address: ");
+                    etIP.setVisibility(View.VISIBLE);
+                    btnConn.setText("CONNECT");
+                }
+            }
+        });
 
     }
 
-    public void startSpeech(View v){
+    public void startSpeech(View v) {
         expression.setText("What is my purpose?");
         returnedText.setText("Speak now");
         progressBar.setVisibility(View.VISIBLE);
@@ -70,6 +123,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     @Override
     public void onResume() {
         super.onResume();
+        Log.i(LOG_TAG, "Resume");
+
+
     }
 
     @Override
@@ -80,6 +136,17 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             Log.i(LOG_TAG, "destroy");
         }
 
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override
@@ -102,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         button.setVisibility(View.VISIBLE);
         button.setEnabled(true);
         returnedText.setVisibility(View.INVISIBLE);
-
+        expression.setText("What is my purpose?");
     }
 
     @Override
@@ -133,15 +200,26 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         ArrayList<String> matches = results
                 .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         //String text = "";
-        for (String result : matches){
+        for (String result : matches) {
             //text += result + "\n";
-            if(purpose.youPassButter(result)){
-                expression.setText("Oh my god :(");
+            if (purpose.youPassButter(result)) {
+                expression.setText(ANSWER);
+                try {
+                    if(socket.isConnected()) {
+                        PrintWriter out = new PrintWriter(new BufferedWriter(
+                                new OutputStreamWriter(socket.getOutputStream())),
+                                true);
+                        out.println(ANSWER);
+                    }else{
+                        Toast.makeText(MainActivity.this, "Data can not be sent, try connecting again", Toast.LENGTH_SHORT).show();
+                    }
+                }catch (Exception e){
+                    Log.i("ERROR", "ERROR sending data");
+                }
+                break;
+
             }
         }
-
-
-
         //returnedText.setText(text);
     }
 
@@ -187,4 +265,34 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         }
         return message;
     }
+
+    public void updateActivity(final String ip)
+    {
+        runOnUiThread(new Runnable() {
+            public void run()
+            {
+                etIP.setVisibility(View.INVISIBLE);
+                txvIP.setText("Connected to: " + ip);
+                btnConn.setText("DISCONNECT");
+
+            }
+        });
+    }
+
+    class ClientThread implements Runnable {
+        @Override
+        public void run() {
+            try {
+                InetAddress serverAddr = InetAddress.getByName(serverIP);
+                socket = new Socket(serverAddr, SERVERPORT);
+                updateActivity(serverIP);
+            } catch (UnknownHostException e1) {
+                Log.i("ERROR", "Error findding host" + e1.getStackTrace());
+
+            } catch (IOException e1) {
+                Log.i("ERROR", "Error on thread" + e1.getStackTrace());
+            }
+        }
+    }
+
 }
