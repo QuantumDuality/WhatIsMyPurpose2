@@ -121,5 +121,4 @@
         android:id="@+id/guideline"
         app:layout_constraintGuide_begin="20dp"
         android:orientation="horizontal" />
-
 </android.support.constraint.ConstraintLayout>
