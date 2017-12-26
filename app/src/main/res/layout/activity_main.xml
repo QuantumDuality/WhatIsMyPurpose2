@@ -51,7 +51,6 @@
         tools:layout_constraintLeft_creator="1"
         android:layout_marginBottom="17dp"
         app:layout_constraintLeft_toLeftOf="parent" />
-
     <EditText
         android:id="@+id/ip_txt"
         android:layout_width="186dp"
@@ -121,5 +120,4 @@
         android:id="@+id/guideline"
         app:layout_constraintGuide_begin="20dp"
         android:orientation="horizontal" />
-
 </android.support.constraint.ConstraintLayout>
