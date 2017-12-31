@@ -37,4 +37,20 @@ public class Purpose {
         return c1 && c2 && c3;
     }
 
+    public boolean passTheButter(String str){
+
+        boolean c1, c2, c3;
+        String[] words = str.split(" ");
+
+        if(words.length == 3){
+            c1 = words[0].charAt(words[0].length() -1 ) == 's';
+            c2 = words[1].equals("the");
+            c3 = words[2].charAt(words[2].length() - 2) == 'e' && words[2].charAt(words[2].length() - 1) == 'r';
+            return c1 & c2 & c3;
+        }
+        else {
+            return false;
+        }
+    }
+
 }

@@ -36,6 +36,7 @@ public class MainActivity extends Activity implements RecognitionListener {
     private Intent recognizerIntent;
     private String LOG_TAG = "VoiceRecognitionActivity";
     private final String ANSWER = "Oh my god :(";
+    public final String ACTION = "Passing the butter";
     private Purpose purpose = new Purpose();
 
 
@@ -168,7 +169,7 @@ public class MainActivity extends Activity implements RecognitionListener {
         progressBar.setVisibility(View.INVISIBLE);
         button.setVisibility(View.VISIBLE);
         button.setEnabled(true);
-        returnedText.setVisibility(View.INVISIBLE);
+        //returnedText.setVisibility(View.INVISIBLE);
         expression.setText("What is my purpose?");
     }
 
@@ -199,9 +200,9 @@ public class MainActivity extends Activity implements RecognitionListener {
         Log.i(LOG_TAG, "onResults");
         ArrayList<String> matches = results
                 .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        //String text = "";
+        String text = "";
         for (String result : matches) {
-            //text += result + "\n";
+            text += result + "\n";
             if (purpose.youPassButter(result)) {
                 expression.setText(ANSWER);
                 try {
@@ -218,6 +219,23 @@ public class MainActivity extends Activity implements RecognitionListener {
                 }
                 break;
 
+            }
+            else {
+                if (purpose.passTheButter(result)) {
+                    try {
+                        if(socket.isConnected()) {
+                            PrintWriter out = new PrintWriter(new BufferedWriter(
+                                    new OutputStreamWriter(socket.getOutputStream())),
+                                    true);
+                            out.println(ACTION);
+                        }else{
+                            Toast.makeText(MainActivity.this, "Data can not be sent, try connecting again", Toast.LENGTH_SHORT).show();
+                        }
+                    }catch (Exception e){
+                        Log.i("ERROR", "ERROR sending data");
+                    }
+                    break;
+                }
             }
         }
         //returnedText.setText(text);
